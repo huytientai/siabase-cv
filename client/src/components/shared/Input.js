@@ -23,12 +23,17 @@ const Input = ({
   className,
   isRequired,
   placeholder,
+  autocomplete,
   type = 'text'
 }) => {
   const { t } = useTranslation();
   const [uuid, setUuid] = useState(null);
   const stateValue = useSelector(path, '');
   const dispatch = useDispatch();
+
+  const [show, setShow] = useState(false);
+  const [userInput, setUserInput] = useState('');
+  const [optionList, setOptionList] = useState([]);
 
   useEffect(() => {
     setUuid(uuidv4());
@@ -48,6 +53,30 @@ const Input = ({
         dispatch({ type: 'update_skynet_synced_status' });
       };
 
+  const onHint = e => {
+    const input = e.target.value;
+
+    const list = autocomplete.filter(item => {
+      return item.toLowerCase().indexOf(input.toLowerCase()) > -1;
+    });
+
+    setUserInput(input);
+    setOptionList(list);
+    setShow(true);
+  };
+
+  const blurOnHint = () => {
+    setShow(false);
+    setOptionList([]);
+  };
+
+  const clickHint = e => {
+    const value = e.target.innerText;
+    setUserInput(value);
+    setShow(false);
+    setOptionList([]);
+  };
+
   return (
     <div className={className}>
       <label htmlFor={uuid}>
@@ -60,19 +89,59 @@ const Input = ({
           )}
         </span>
 
-        {(type === 'text' || type === 'date') && (
-          <div className='relative grid items-center'>
-            <input
-              id={uuid}
-              name={name}
-              type={type}
-              value={value}
-              onBlur={onBlur}
-              onChange={onChange}
-              placeholder={placeholder}
-            />
-          </div>
-        )}
+        {(type === 'text' || type === 'date') &&
+          (autocomplete ? (
+            <div className='relative grid items-center'>
+              <input
+                id={uuid}
+                name={name}
+                type={type}
+                value={userInput}
+                onBlur={(onBlur, blurOnHint)}
+                onChange={e => onHint(e)}
+                placeholder={placeholder}
+                autoComplete='off'
+              />
+              {show && optionList && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    width: 264,
+                    height: 38,
+                    paddingTop: 38
+                  }}
+                >
+                  {optionList.map((item, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        backgroundColor: 'white',
+                        color: 'black'
+                      }}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                      }}
+                      onClick={clickHint}
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className='relative grid items-center'>
+              <input
+                id={uuid}
+                name={name}
+                type={type}
+                value={value}
+                onBlur={onBlur}
+                onChange={onChange}
+                placeholder={placeholder}
+              />
+            </div>
+          ))}
 
         {type === 'textarea' && (
           <div className='flex flex-col'>

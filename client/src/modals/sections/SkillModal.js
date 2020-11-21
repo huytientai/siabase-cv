@@ -1,5 +1,6 @@
 import { Formik } from 'formik';
-import React, { memo } from 'react';
+import React, { memo, useEffect, useState } from 'react';
+import firebase from 'gatsby-plugin-firebase';
 import { useTranslation } from 'react-i18next';
 import * as Yup from 'yup';
 import Input from '../../components/shared/Input';
@@ -20,6 +21,17 @@ const SkillModal = () => {
     level: Yup.string().required(t('shared.forms.validation.required'))
   });
 
+  const [hint, setHint] = useState([]);
+
+  useEffect(() => {
+    firebase
+      .database()
+      .ref('skills/')
+      .on('value', snapshot => {
+        setHint(snapshot.val());
+      });
+  }, []);
+
   return (
     <Formik
       validateOnBlur
@@ -36,6 +48,7 @@ const SkillModal = () => {
             <Input
               label={t('shared.forms.name')}
               placeholder='ReactJS'
+              autocomplete={hint}
               {...getFieldProps(formik, schema, 'name')}
             />
 
